@@ -2,43 +2,40 @@
 
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class PostControllerr extends Controller
 {
 
-    public function getObject(){
-        $object;
+    public function getObject()
+    {
+        try {
+            $response = Http::get('https://api.chucknorris.io/jokes/random');
+            $object = $response->json();
 
-        $url = 'https://api.chucknorris.io/jokes/random';
-
-        $ch = curl_init($url);
-
-        $headers = array(
-            'Content-Type:application/json'
-        );
-
-        curl_setopt($ch , CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch , CURLOPT_RETURNTRANSFER, true);
-     
-        $result = curl_exec($ch);
-        curl_close($ch);
-
-        $object = json_decode($result, true);
-
-        //return response()->json(['message'=>'Registros encontrados.','object'=>$object]);
-        return $object;
+            return $object;
+        } catch (\Exception $e) {
+            return null;
+        }
     }
     
     public function getArrray(){
         $objects = [];
         $cont = 1;
 
-        for($i = 0; $i < 25 ; $i++){
-            $obj= $this->getObject();
-            array_push($obj, $cont);            
-            array_push($objects, $obj);
-            $cont++; 
+        while (count($objects) < 25) {
+            foreach (range(1, 25) as $cont) {            
+                $obj = $this->getObject();
+    
+                if(array_search($obj["id"], $objects) == false){
+                    $obj[] = $cont;
+                    $objects[] = $obj;
+                }
+    
+            }
         }
+
+        
 
         return response()->json(['message'=>'Registros encontrados.','objects'=>$objects]);
 
